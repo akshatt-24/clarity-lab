@@ -1,0 +1,170 @@
+[
+    {
+        "test_name": "Haemoglobin",
+        "value": "14.5",
+        "unit": "Gm/dL",
+        "reference_range": "Adult(Male) 12.5 -18",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Total W.B.C. Count",
+        "value": "3.88",
+        "unit": "10^3/uL.",
+        "reference_range": "5.0 - 10.0",
+        "flag": "L",
+        "status": "LOW"
+    },
+    {
+        "test_name": "Polymorphs",
+        "value": "62.9",
+        "unit": "%",
+        "reference_range": "40 - 75",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Lymphocytes",
+        "value": "29.1",
+        "unit": "%",
+        "reference_range": "20 - 45",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Eosinophils",
+        "value": "2.3",
+        "unit": "%",
+        "reference_range": "1 - 6",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Monocytes",
+        "value": "5.2",
+        "unit": "%",
+        "reference_range": "2 - 10",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Basophils",
+        "value": "0.5",
+        "unit": "%",
+        "reference_range": "0 - 1",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Platelet Count",
+        "value": "138",
+        "unit": "10^3/ul",
+        "reference_range": "150 - 450",
+        "flag": "L",
+        "status": "LOW"
+    },
+    {
+        "test_name": "RBC Count",
+        "value": "5.10",
+        "unit": "10^6/uL",
+        "reference_range": "4.5 - 6.5",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "Packed cell volume(PCV)",
+        "value": "42.70",
+        "unit": "%",
+        "reference_range": "40 - 50",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "M.C.V.",
+        "value": "83.7",
+        "unit": "fL",
+        "reference_range": "83 - 101",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "M.C.H.",
+        "value": "28.4",
+        "unit": "pg",
+        "reference_range": "27-32",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "M.C.H.C.",
+        "value": "34.0",
+        "unit": "g/dL",
+        "reference_range": "31.5 - 34.5",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "RBC Distribution Width -CV (RDW-CV)",
+        "value": "13.9",
+        "unit": "%",
+        "reference_range": "8 - 12",
+        "flag": "H",
+        "status": "HIGH"
+    },
+    {
+        "test_name": "RDW-SD",
+        "value": "42.5",
+        "unit": "fl",
+        "reference_range": "39.0-46.0",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "PDW",
+        "value": "10.70",
+        "unit": "fL",
+        "reference_range": "8.1 - 25.0",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "MPV",
+        "value": "10.30",
+        "unit": "fL",
+        "reference_range": "8.0 - 11.8",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "P-LCR",
+        "value": "25.90",
+        "unit": "%",
+        "reference_range": "15 - 35",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "PCT",
+        "value": "0.10",
+        "unit": "%",
+        "reference_range": "0.20 - 0.25",
+        "flag": "L",
+        "status": "LOW"
+    },
+    {
+        "test_name": "IG",
+        "value": "0.30",
+        "unit": "%",
+        "reference_range": "0 - 1",
+        "flag": null,
+        "status": "NORMAL"
+    },
+    {
+        "test_name": "P-LCR",
+        "value": "(Platelet",
+        "unit": "Large",
+        "reference_range": "Cell Ratio) is an indicator of circulating larger platelet (>12fl). Used to monitor platelet activity.",
+        "flag": null,
+        "status": "UNKNOWN"
+    }
+]

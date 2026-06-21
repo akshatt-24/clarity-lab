@@ -1,0 +1,158 @@
+# =====================================================
+# CLARITYLAB - FULL STACK AI PROJECT
+# Backend: FastAPI / Python
+# Frontend: React / Next.js / Vite
+# =====================================================
+
+# =========================
+# ENVIRONMENT VARIABLES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type checking
+.mypy_cache/
+.pyright/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# =========================
+# FASTAPI / LOGGING
+# =========================
+*.log
+logs/
+backend/logs/
+
+# Runtime files
+*.pid
+*.sqlite3
+*.db
+
+# =========================
+# IDE / EDITOR
+# =========================
+.vscode/
+.idea/
+
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# =========================
+# NODE / FRONTEND
+# =========================
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# FRONTEND ENV FILES
+# =========================
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+
+# =========================
+# REACT / VITE
+# =========================
+.vite/
+vite.svg
+
+# =========================
+# CACHE FILES
+# =========================
+.cache/
+.parcel-cache/
+.eslintcache
+
+# =========================
+# TEST OUTPUTS
+# =========================
+playwright-report/
+test-results/
+
+# =========================
+# AI / ML
+# =========================
+models/
+checkpoints/
+weights/
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+
+# Large datasets
+data/
+datasets/
+
+# =========================
+# MEDIAPIPE / CV OUTPUTS
+# =========================
+captures/
+recordings/
+screenshots/
+exports/
+
+# =========================
+# TEMP FILES
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# OS GENERATED FILES
+# =========================
+*.swp
+*.swo
+*~
+
+# =========================
+# SECRETS
+# =========================
+secrets/
+credentials/
+service-account.json
+google-credentials.json
