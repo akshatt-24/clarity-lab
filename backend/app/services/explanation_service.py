@@ -99,7 +99,7 @@ No markdown.
 No code fences.
 No extra text.
 """
-    print("CALLING GEMINI") # DEBUG STATEMENT
+    # print("CALLING GEMINI") # DEBUG STATEMENT
     response = client.models.generate_content(
         model=MODEL_NAME,
         contents=prompt
