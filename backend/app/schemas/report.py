@@ -4,6 +4,10 @@ from backend.app.schemas.explanation import (
     BiomarkerExplanation
 )
 
+from backend.app.schemas.normal_biomarker import (
+    NormalBiomarker
+)
+
 
 class ReportExplanation(BaseModel):
 
@@ -15,4 +19,14 @@ class ReportExplanation(BaseModel):
 
     low_count: int
 
-    biomarkers: list[BiomarkerExplanation]
+    attention_required: list[
+        BiomarkerExplanation
+    ]
+
+    normal_biomarkers: list[
+        NormalBiomarker
+    ]
+
+    biomarkers: list[
+        BiomarkerExplanation
+    ]

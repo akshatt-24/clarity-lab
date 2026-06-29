@@ -16,6 +16,9 @@ def generate_report(biomarkers):
 
     for biomarker in biomarkers:
 
+        if biomarker.status == "Normal":
+            continue
+
         explanation = generate_explanation(
             biomarker
         )

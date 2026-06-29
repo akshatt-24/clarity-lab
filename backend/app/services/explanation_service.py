@@ -21,6 +21,11 @@ from backend.app.services.cache import (
 def generate_explanation(
     biomarker
 ):
+    # Skip normal biomarkers completely
+
+    if biomarker.status == "Normal":
+
+        return None
     
     cache_key = (
         f"{biomarker.test_name}"
