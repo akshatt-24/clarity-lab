@@ -7,9 +7,14 @@ from backend.app.schemas.explanation import (
 from backend.app.schemas.normal_biomarker import (
     NormalBiomarker
 )
+from uuid import UUID
+
+
 
 
 class ReportExplanation(BaseModel):
+
+    report_id: UUID | None = None
 
     summary: str
 
@@ -19,14 +24,8 @@ class ReportExplanation(BaseModel):
 
     low_count: int
 
-    attention_required: list[
-        BiomarkerExplanation
-    ]
+    attention_required: list[BiomarkerExplanation]
 
-    normal_biomarkers: list[
-        NormalBiomarker
-    ]
+    normal_biomarkers: list
 
-    biomarkers: list[
-        BiomarkerExplanation
-    ]
+    biomarkers: list[BiomarkerExplanation]

@@ -1,0 +1,1 @@
+from backend.app.services.cbc_parser_core import extract_biomarkers

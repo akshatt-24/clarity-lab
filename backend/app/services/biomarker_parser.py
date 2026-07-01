@@ -28,6 +28,8 @@ KNOWN_PARAMETERS = {
 
 def is_biomarker_row(line: str) -> bool:
 
+    line = line.strip()
+
     for parameter in KNOWN_PARAMETERS:
 
         if line.startswith(parameter):
@@ -39,6 +41,8 @@ def is_biomarker_row(line: str) -> bool:
 def parse_biomarker_row(line: str):
 
     matched_parameter = None
+    
+    line = line.strip()
 
     for parameter in KNOWN_PARAMETERS:
 

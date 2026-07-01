@@ -1,4 +1,4 @@
-﻿type Biomarker = {
+type Biomarker = {
   test_name?: string;
   status?: string;
   explanation?: string;
@@ -6,44 +6,36 @@
   questions_to_ask?: string[];
 };
 
-type Props = {
-  biomarker: Biomarker;
-};
+type Props = { biomarker: Biomarker };
 
 export default function AttentionCard({ biomarker }: Props) {
   return (
-    <div className="glass-card mb-4 rounded-2xl p-6">
-      <div className="flex justify-between gap-4">
-        <h3 className="text-xl font-semibold text-[#10213f]">
-          {biomarker.test_name ?? "Biomarker"}
-        </h3>
-        <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-[#ef4444]">
+    <div className="glass-card hover-glow mb-3 rounded-xl p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-[#0e1d38]">{biomarker.test_name ?? "Biomarker"}</h3>
+        <span className="badge-red rounded-full px-2.5 py-0.5 text-xs font-semibold">
           {biomarker.status ?? "Flagged"}
         </span>
       </div>
 
-      <p className="mt-4 text-[#5f7192]">
+      <p className="mt-3 text-xs leading-relaxed text-[#5a6b86]">
         {biomarker.explanation ?? "This marker needs review with clinical context."}
       </p>
 
       {!!biomarker.possible_causes?.length && (
-        <div className="mt-4">
-          <h4 className="font-semibold text-[#10213f]">Possible Causes</h4>
-          <ul className="ml-6 mt-2 list-disc text-[#5f7192]">
-            {biomarker.possible_causes.map((cause) => (
-              <li key={cause}>{cause}</li>
-            ))}
+        <div className="mt-3">
+          <h4 className="text-xs font-semibold text-[#0e1d38]">Possible Causes</h4>
+          <ul className="ml-4 mt-1.5 list-disc space-y-0.5 text-xs text-[#5a6b86]">
+            {biomarker.possible_causes.map((cause) => <li key={cause}>{cause}</li>)}
           </ul>
         </div>
       )}
 
       {!!biomarker.questions_to_ask?.length && (
-        <div className="mt-4">
-          <h4 className="font-semibold text-[#10213f]">Questions To Ask</h4>
-          <ul className="ml-6 mt-2 list-disc text-[#5f7192]">
-            {biomarker.questions_to_ask.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
+        <div className="mt-3">
+          <h4 className="text-xs font-semibold text-[#0e1d38]">Questions To Ask</h4>
+          <ul className="ml-4 mt-1.5 list-disc space-y-0.5 text-xs text-[#5a6b86]">
+            {biomarker.questions_to_ask.map((q) => <li key={q}>{q}</li>)}
           </ul>
         </div>
       )}

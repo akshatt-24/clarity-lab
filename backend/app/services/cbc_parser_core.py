@@ -29,16 +29,30 @@ from backend.app.services.biomarker_parser import (
 def extract_biomarkers(pdf_path: str):
 
     text = extract_text(pdf_path)
+    ## WORKS !!
+    # print("========== PDF TEXT ==========")
+    # print(text[:1500])
+    # print("==============================")
 
     rows = extract_candidate_rows(
         text
     )
+    
+    ## WORKS
+    # print("Rows extracted:", len(rows))
+
+    # for r in rows[:15]:
+    #     print(r)
 
     biomarkers = []
 
     for row in rows:
 
-        if is_biomarker_row(row):
+        result = is_biomarker_row(row)
+
+        # print(repr(row))
+
+        if result:
 
             biomarker = parse_biomarker_row(
                 row

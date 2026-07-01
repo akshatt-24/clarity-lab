@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "clarity-lab-frontend",
+			"path": "."
+		},
+		{
+			"name": "public",
+			"path": "../../landing_page_update/public"
+		}
+	],
+	"settings": {}
+}

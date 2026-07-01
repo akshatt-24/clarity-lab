@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.append(str(ROOT))
 
-from backend.app.services.pdf_parser import extract_text
+from backend.app.services.cbc_parser_core import extract_text
 from backend.app.services.row_extractor import extract_candidate_rows
 
 from backend.app.services.biomarker_parser import (

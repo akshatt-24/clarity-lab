@@ -6,6 +6,12 @@ from fastapi import (APIRouter,
 from pathlib import Path
 import shutil
 
+## Dependency Injection : instead of process_report(filepath) we inject a database session.
+
+from sqlalchemy.orm import Session
+from backend.app.db.database import get_db
+from fastapi import Depends
+
 from backend.app.services.pipeline import (  
     process_report
 )
@@ -31,7 +37,8 @@ def health():
     
 @router.post("/upload")
 async def upload_report(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
 ):
 
     filepath = (
@@ -51,7 +58,8 @@ async def upload_report(
         
     try:
         report = process_report(
-                    filepath
+                    filepath,
+                    db,
                 )
 
         return report.model_dump()
