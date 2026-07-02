@@ -5,7 +5,7 @@ import { CheckCircle2, FileUp, Loader2, Upload } from "lucide-react";
 import { uploadReport } from "@/lib/api/reports";
 
 interface UploadCardProps {
-  onUploadComplete?: (report: unknown) => void;
+    onUploadComplete?: (report: ClarityReport) => void;
 }
 
 export default function UploadCard({ onUploadComplete }: UploadCardProps) {

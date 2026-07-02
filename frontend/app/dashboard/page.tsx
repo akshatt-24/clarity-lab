@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import ReportViewer from "@/components/report/ReportViewer";
+import { ClarityReport } from "@/lib/api/reports";
+
 import { AlertCircle, Clock3, FileText } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import UploadCard from "@/components/report/UploadCard";
@@ -9,6 +15,8 @@ const stats = [
 ];
 
 export default function Dashboard() {
+  const [report, setReport] =
+  useState<ClarityReport | null>(null);
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1400px]">
@@ -33,9 +41,22 @@ export default function Dashboard() {
         <div className="mt-9">
           <h2 className="text-base font-semibold text-[#0e1d38]">Upload New Report</h2>
           <p className="mt-1 text-sm text-[#5a6b86]">Supports JPG, PNG, and PDF formats</p>
-          <UploadCard />
+          <UploadCard
+              onUploadComplete={setReport}
+            />
         </div>
       </div>
+      {report && (
+
+        <div className="mt-8">
+
+            <ReportViewer
+                report={report}
+            />
+
+        </div>
+
+  )}
     </DashboardLayout>
   );
 }

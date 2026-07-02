@@ -1,5 +1,7 @@
 import { AlertCircle, CheckCircle2, TrendingDown, TrendingUp } from "lucide-react";
 import { ClarityReport } from "@/lib/api/reports";
+import AttentionCard from "./AttentionCard";
+import NormalBiomarkersCard from "./NormalBiomarkersCard";
 
 export default function ReportViewer({ report }: { report: ClarityReport }) {
   const attention = report.attention_required ?? [];
@@ -37,7 +39,7 @@ export default function ReportViewer({ report }: { report: ClarityReport }) {
           <div className="mt-4 space-y-2.5">
             {attention.length ? (
               attention.map((item, index) => (
-                <BiomarkerRow key={String(item.test_name ?? index)} item={item} variant="attention" />
+                <AttentionCard key={String(item.test_name ?? index)} biomarker={item} />
               ))
             ) : (
               <p className="rounded-xl bg-white/58 px-4 py-3 text-xs text-[#5a6b86]">No flagged biomarkers returned.</p>
@@ -54,7 +56,7 @@ export default function ReportViewer({ report }: { report: ClarityReport }) {
           <div className="mt-4 space-y-2.5">
             {normal.length ? (
               normal.slice(0, 6).map((item, index) => (
-                <BiomarkerRow key={String(item.test_name ?? index)} item={item} variant="normal" />
+                <NormalBiomarkersCard key={String(item.test_name ?? index)} biomarkers={normal} />
               ))
             ) : (
               <p className="rounded-xl bg-white/58 px-4 py-3 text-xs text-[#5a6b86]">Normal biomarkers will appear here after analysis.</p>
