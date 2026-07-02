@@ -16,6 +16,14 @@ from backend.app.services.pipeline import (
     process_report
 )
 
+from backend.app.repositories.report_repository import (
+    get_reports,
+)
+
+from backend.app.schemas.report_history import (
+    ReportHistoryItem,
+)
+
 router = APIRouter(
     prefix="/reports",
     tags=["Reports"]
@@ -70,5 +78,15 @@ async def upload_report(
             status_code = 500,
             detail = str(e)
         )
+        
+@router.get(
+    "/history",
+    response_model=list[ReportHistoryItem],
+)
+def report_history(
+    db: Session = Depends(get_db),
+):
+
+    return get_reports(db)
     
     

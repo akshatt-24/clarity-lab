@@ -33,7 +33,7 @@ def get_reports(db: Session):
 
 def get_report(
     db: Session,
-    report_id: int,
+    report_id: str,
 ):
 
     return (
