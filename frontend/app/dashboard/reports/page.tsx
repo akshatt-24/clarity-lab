@@ -1,28 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
-import { Calendar, CheckCircle2, FileText, Filter, Search, AlertCircle } from "lucide-react";
+import { Calendar,  FileText, Filter, Search } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ReportViewer from "@/components/report/ReportViewer";
 import UploadCard from "@/components/report/UploadCard";
-import { ClarityReport } from "@/lib/api/reports";
+import {
+  ClarityReport,
+  ReportHistoryItem,
+  getReports,
+} from "@/lib/api/reports";
 
-const reports = [
-  { title: "Blood Test – Complete Metabolic Panel", date: "6/25/2026", type: "Blood Work",    flagged: 3 },
-  { title: "Annual Physical Exam Results",          date: "6/20/2026", type: "Physical Exam", flagged: 0 },
-  { title: "Lipid Panel",                           date: "6/15/2026", type: "Blood Work",    flagged: 1 },
-  { title: "Thyroid Function Test",                 date: "6/10/2026", type: "Blood Work",    flagged: 0 },
-];
 
 export default function ReportsPage() {
   const [query, setQuery]   = useState("");
   const [report, setReport] = useState<ClarityReport | null>(null);
+  const [reports, setReports] = useState<ReportHistoryItem[]>([]);
+  console.log("REPORT STATE:", reports);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   const filteredReports = useMemo(
-    () => reports.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())),
-    [query]
+    () => reports.filter((item) => item.file_name.toLowerCase().includes(query.toLowerCase())),
+    [reports, query]
   );
+
+  useEffect(() => {
+  async function loadReports() {
+    try {
+      const data = await getReports();
+
+      console.log("REPORT DATA:", data);
+
+      setReports(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReports(false);
+    }
+  }
+
+  loadReports();
+}, []);
 
   return (
     <DashboardLayout>
@@ -50,45 +73,57 @@ export default function ReportsPage() {
         </div>
 
         {/* Report list */}
+        {loadingReports && (
+          <div className="mt-6 glass-card rounded-xl p-5 text-sm text-[#5a6b86]">
+            Loading reports...
+          </div>
+        )}
         <div className="mt-6 grid gap-4 xl:grid-cols-2">
-          {filteredReports.map((item) => (
-            <article key={item.title} className="glass-card hover-glow flex items-center gap-4 rounded-xl p-5">
+          
+          {filteredReports.length === 0 ? (
+              <div className="glass-card rounded-xl p-6 text-sm text-[#5a6b86]">
+                No reports found.
+              </div>
+            ) : (
+          filteredReports.map((item) => (
+            <article key={item.id} className="glass-card hover-glow flex items-center gap-4 rounded-xl p-5">
               <div className="brand-gradient grid h-14 w-14 shrink-0 place-items-center rounded-xl text-white shadow-sm">
                 <FileText size={26} strokeWidth={1.9} />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold text-[#0e1d38]">{item.title}</h2>
+                <h2 className="truncate text-sm font-semibold text-[#0e1d38]">{item.file_name}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-3 text-[#8a97aa]">
                   <span className="inline-flex items-center gap-1.5 text-xs">
                     <Calendar size={12} />
-                    {item.date}
+                    {new Date(item.uploaded_at).toLocaleDateString()}
                   </span>
-                  <span className="rounded-full bg-[#edf3f8] px-2.5 py-0.5 text-xs font-medium text-[#5a6b86]">{item.type}</span>
+                  <span className="rounded-full bg-[#edf3f8] px-2.5 py-0.5 text-xs font-medium text-[#5a6b86]">
+                      Lab Report
+                  </span>
                 </div>
                 <div className="mt-2">
-                  {item.flagged ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#e53e3e]">
-                      <AlertCircle size={13} />
-                      {item.flagged} items flagged
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#28893e]">
-                      <CheckCircle2 size={13} />
-                      All clear
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5a6b86]">
+                    {item.summary.slice(0, 70)}...
+                  </span>
                 </div>
               </div>
-              <Link href="/dashboard/reports" className="shrink-0 text-xs font-semibold text-[#2f7de8] hover:underline">
+              <Link href={`/dashboard/reports/${item.id}`} className="shrink-0 text-xs font-semibold text-[#2f7de8] hover:underline">
                 View →
               </Link>
             </article>
-          ))}
+          ))
+        )}
         </div>
 
         <div className="mt-9">
           <h2 className="text-base font-semibold text-[#0e1d38]">Analyze a New Report</h2>
-          <UploadCard onUploadComplete={setReport} />
+          <UploadCard
+            onUploadComplete={(uploadedReport) => {
+              setReport(uploadedReport);
+
+              getReports().then(setReports);
+            }}
+          />
           {report && <ReportViewer report={report} />}
         </div>
       </div>

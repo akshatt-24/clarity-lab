@@ -5,7 +5,7 @@ from backend.app.models.biomarker import Biomarker
 
 def create_biomarker(
     db: Session,
-    report_id: int,
+    report_id: str,
     biomarker,
 ):
 
@@ -20,6 +20,30 @@ def create_biomarker(
         reference_range=biomarker.reference_range,
 
         status=biomarker.status,
+
+        explanation=getattr(
+            biomarker,
+            "explanation",
+            None,
+        ),
+
+        possible_causes=getattr(
+            biomarker,
+            "possible_causes",
+            None,
+        ),
+
+        questions_to_ask=getattr(
+            biomarker,
+            "questions_to_ask",
+            None,
+        ),
+
+        disclaimer=getattr(
+            biomarker,
+            "disclaimer",
+            None,
+        ),
     )
 
     db.add(row)
@@ -29,7 +53,7 @@ def create_biomarker(
 
 def create_many(
     db: Session,
-    report_id: int,
+    report_id: str,
     biomarkers,
 ):
 
@@ -42,3 +66,14 @@ def create_many(
         )
 
     db.commit()
+
+
+def get_by_report(
+    db: Session,
+    report_id: str,
+):
+    return (
+        db.query(Biomarker)
+        .filter(Biomarker.report_id == report_id)
+        .all()
+    )

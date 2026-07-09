@@ -10,6 +10,8 @@ export interface Biomarker {
   explanation?: string;
   possible_causes?: string[];
   questions_to_ask?: string[];
+
+  disclaimer?: string;
 }
 
 export interface ClarityReport {
@@ -28,6 +30,16 @@ export interface ClarityReport {
   normal_biomarkers: Biomarker[];
 }
 
+/*
+Report history item
+*/
+export interface ReportHistoryItem {
+  id: string;
+  file_name: string;
+  summary: string;
+  uploaded_at: string;
+}
+
 export async function uploadReport(
   file: File
 ): Promise<ClarityReport> {
@@ -39,6 +51,32 @@ export async function uploadReport(
   const response = await api.post(
     "/reports/upload",
     formData
+  );
+
+  return response.data;
+}
+
+/*
+Fetch report history
+*/
+export async function getReports(): Promise<ReportHistoryItem[]> {
+
+  const response = await api.get(
+    "/reports/history"
+  );
+
+  return response.data;
+}
+
+/*
+Fetch one report
+*/
+export async function getReport(
+  reportId: string
+): Promise<ClarityReport> {
+
+  const response = await api.get(
+    `/reports/${reportId}`
   );
 
   return response.data;

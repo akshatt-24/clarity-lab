@@ -7,14 +7,156 @@ import {
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
+import {
+  useSignUp,
+  useSignIn,
+} from "@clerk/nextjs";
+
 export default function AuthPage() {
   const [mode, setMode]           = useState<"signin" | "signup">("signin");
   const [showPass, setShowPass]   = useState(false);
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [name, setName]           = useState("");
+  const [code, setCode]           = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [error, setError]         = useState<string | null>(null);
+  const [loading, setLoading]     = useState(false);
+
+  // Clerk v7 "Future" API — signIn/signUp are always defined objects (never null),
+  // fetchStatus replaces the old isLoaded/loading pattern.
+  const { signIn, fetchStatus: signInFetchStatus } = useSignIn();
+  const { signUp, fetchStatus: signUpFetchStatus } = useSignUp();
 
   const isSignUp = mode === "signup";
+  const busy = loading || signInFetchStatus === "fetching" || signUpFetchStatus === "fetching";
+
+  function readError(err: { message?: string; longMessage?: string } | null, fallback: string) {
+    if (!err) return fallback;
+    return err.longMessage || err.message || fallback;
+  }
+
+  // ── Email/password sign up: creates the account, then sends a verification code ──
+  async function handleSignup() {
+    setError(null);
+    setLoading(true);
+    try {
+      const { error: err } = await signUp.password({
+        emailAddress: email,
+        password,
+        firstName: name || undefined,
+      });
+
+      if (err) {
+        setError(readError(err, "Something went wrong while creating your account."));
+        return;
+      }
+
+      if (signUp.status === "complete") {
+        // No verification required (e.g. email verification disabled) — activate directly.
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            window.location.href = decorateUrl("/dashboard");
+          },
+        });
+        return;
+      }
+
+      // status === "missing_requirements" → needs email verification
+      const { error: codeErr } = await signUp.verifications.sendEmailCode();
+      if (codeErr) {
+        setError(readError(codeErr, "Couldn't send a verification code. Please try again."));
+        return;
+      }
+      setPendingVerification(true);
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Confirms the code sent to the user's email, then activates the session ──
+  async function handleVerifyEmail() {
+    setError(null);
+    setLoading(true);
+    try {
+      const { error: err } = await signUp.verifications.verifyEmailCode({ code });
+
+      if (err) {
+        setError(readError(err, "Invalid or expired verification code."));
+        return;
+      }
+
+      if (signUp.status === "complete") {
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            window.location.href = decorateUrl("/dashboard");
+          },
+        });
+      } else {
+        setError("Verification incomplete. Please check the code and try again.");
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Email/password sign in ──
+  async function handleSignin() {
+    setError(null);
+    setLoading(true);
+    try {
+      const { error: err } = await signIn.password({
+        identifier: email,
+        password,
+      });
+
+      if (err) {
+        setError(readError(err, "Invalid email or password."));
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            window.location.href = decorateUrl("/dashboard");
+          },
+        });
+      } else {
+        setError("Additional verification is required to sign in.");
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Google OAuth via redirect (keeps your custom UI, no Clerk modal) ──
+  async function handleGoogleAuth() {
+    setError(null);
+    try {
+      const { error: err } = await signIn.sso({
+        strategy: "oauth_google",
+        redirectUrl: "/dashboard",
+        redirectCallbackUrl: "/sso-callback",
+      });
+      if (err) {
+        setError(readError(err, "Google sign-in failed. Please try again."));
+      }
+    } catch (err) {
+      setError("Google sign-in failed. Please try again.");
+      console.error(err);
+    }
+  }
+
+  const primaryAction = isSignUp ? handleSignup : handleSignin;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
@@ -78,170 +220,235 @@ export default function AuthPage() {
             <Logo />
           </div>
 
-          {/* Mode toggle tabs */}
-          <div className="flex rounded-xl bg-[#edf3f8] p-1">
-            {(["signin", "signup"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
-                  mode === m
-                    ? "bg-white text-[#0e1d38] shadow-sm"
-                    : "text-[#8a97aa] hover:text-[#5a6b86]"
-                }`}
-              >
-                {m === "signin" ? "Sign In" : "Create Account"}
-              </button>
-            ))}
-          </div>
+          {pendingVerification ? (
+            <>
+              {/* ── Email verification step (sign-up only) ── */}
+              <div className="mt-2">
+                <h1 className="text-xl font-semibold tracking-tight text-[#0e1d38]">
+                  Verify your email
+                </h1>
+                <p className="mt-1.5 text-sm text-[#5a6b86]">
+                  Enter the 6-digit code we sent to <span className="font-medium text-[#0e1d38]">{email}</span>.
+                </p>
+              </div>
 
-          {/* Heading */}
-          <div className="mt-7">
-            <h1 className="text-xl font-semibold tracking-tight text-[#0e1d38]">
-              {isSignUp ? "Create your account" : "Welcome back"}
-            </h1>
-            <p className="mt-1.5 text-sm text-[#5a6b86]">
-              {isSignUp
-                ? "Start understanding your health reports today."
-                : "Sign in to access your reports and insights."}
-            </p>
-          </div>
-
-          {/* Form */}
-          <div className="mt-7 space-y-4">
-            {/* Name field (sign-up only) */}
-            {isSignUp && (
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-[#5a6b86]">Full Name</label>
-                <div className="relative">
-                  <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Akshat Kumar"
-                    className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
-                  />
+              <div className="mt-7 space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5a6b86]">Verification code</label>
+                  <div className="relative">
+                    <ShieldCheck size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder="123456"
+                      className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {/* Email */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#5a6b86]">Email address</label>
-              <div className="relative">
-                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#5a6b86]">Password</label>
-                {!isSignUp && (
-                  <button className="text-xs font-medium text-[#2f7de8] hover:underline">Forgot password?</button>
+                {error && (
+                  <p className="text-xs font-medium text-red-500">{error}</p>
                 )}
-              </div>
-              <div className="relative">
-                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isSignUp ? "Create a strong password" : "Enter your password"}
-                  className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-10 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
-                />
+
                 <button
                   type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4] hover:text-[#5a6b86]"
-                  aria-label={showPass ? "Hide password" : "Show password"}
+                  disabled={busy}
+                  onClick={handleVerifyEmail}
+                  className="orange-button focus-ring mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition disabled:opacity-60"
                 >
-                  {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {busy ? "Verifying..." : "Verify & Continue"}
+                  <ArrowRight size={15} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingVerification(false);
+                    setError(null);
+                  }}
+                  className="w-full text-center text-xs font-medium text-[#a8b4c4] hover:text-[#5a6b86]"
+                >
+                  ← Back
                 </button>
               </div>
-            </div>
+            </>
+          ) : (
+            <>
+              {/* Mode toggle tabs */}
+              <div className="flex rounded-xl bg-[#edf3f8] p-1">
+                {(["signin", "signup"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      setMode(m);
+                      setError(null);
+                    }}
+                    className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
+                      mode === m
+                        ? "bg-white text-[#0e1d38] shadow-sm"
+                        : "text-[#8a97aa] hover:text-[#5a6b86]"
+                    }`}
+                  >
+                    {m === "signin" ? "Sign In" : "Create Account"}
+                  </button>
+                ))}
+              </div>
 
-            {/* Submit */}
-            <button
-              type="button"
-              className="orange-button focus-ring mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition"
-            >
-              {isSignUp ? "Create Account" : "Sign In"}
-              <ArrowRight size={15} />
-            </button>
-          </div>
+              {/* Heading */}
+              <div className="mt-7">
+                <h1 className="text-xl font-semibold tracking-tight text-[#0e1d38]">
+                  {isSignUp ? "Create your account" : "Welcome back"}
+                </h1>
+                <p className="mt-1.5 text-sm text-[#5a6b86]">
+                  {isSignUp
+                    ? "Start understanding your health reports today."
+                    : "Sign in to access your reports and insights."}
+                </p>
+              </div>
 
-          {/* Divider */}
-          <div className="mt-5 flex items-center gap-3">
-            <span className="h-px flex-1 bg-[#0e1d38]/08" />
-            <span className="text-xs text-[#a8b4c4]">or continue with</span>
-            <span className="h-px flex-1 bg-[#0e1d38]/08" />
-          </div>
-
-          {/* OAuth placeholders */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {["Google", "GitHub"].map((provider) => (
-              <button
-                key={provider}
-                type="button"
-                className="ghost-button focus-ring flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold text-[#0e1d38]"
-              >
-                {provider === "Google" ? (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                ) : (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                  </svg>
+              {/* Form */}
+              <div className="mt-7 space-y-4">
+                {/* Name field (sign-up only) */}
+                {isSignUp && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[#5a6b86]">Full Name</label>
+                    <div className="relative">
+                      <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Akshat Kumar"
+                        className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
+                      />
+                    </div>
+                  </div>
                 )}
-                {provider}
-              </button>
-            ))}
-          </div>
 
-          {/* Footer note */}
-          <p className="mt-6 text-center text-xs text-[#a8b4c4]">
-            {isSignUp ? (
-              <>
-                Already have an account?{" "}
-                <button onClick={() => setMode("signin")} className="font-semibold text-[#2f7de8] hover:underline">
-                  Sign in
+                {/* Email */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#5a6b86]">Email address</label>
+                  <div className="relative">
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-4 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#5a6b86]">Password</label>
+                    {!isSignUp && (
+                      <button className="text-xs font-medium text-[#2f7de8] hover:underline">Forgot password?</button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4]" />
+                    <input
+                      type={showPass ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={isSignUp ? "Create a strong password" : "Enter your password"}
+                      className="glass-input focus-ring w-full rounded-xl py-2.5 pl-9 pr-10 text-sm text-[#0e1d38] placeholder:text-[#c0cad6]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a8b4c4] hover:text-[#5a6b86]"
+                      aria-label={showPass ? "Hide password" : "Show password"}
+                    >
+                      {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-xs font-medium text-red-500">{error}</p>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={primaryAction}
+                  className="orange-button focus-ring mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition disabled:opacity-60"
+                >
+                  {busy ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+                  <ArrowRight size={15} />
                 </button>
-              </>
-            ) : (
-              <>
-                Don&apos;t have an account?{" "}
-                <button onClick={() => setMode("signup")} className="font-semibold text-[#2f7de8] hover:underline">
-                  Sign up free
-                </button>
-              </>
-            )}
-          </p>
+              </div>
 
-          {/* Clerk note */}
-          <div className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-[#edf3f8] px-3 py-2">
-            <ShieldCheck size={13} className="text-[#1f8068]" />
-            <p className="text-[11px] text-[#8a97aa]">
-              Connect <span className="font-semibold text-[#0e1d38]">Clerk</span> to enable secure authentication
-            </p>
-          </div>
+              {/* Divider */}
+              <div className="mt-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-[#0e1d38]/08" />
+                <span className="text-xs text-[#a8b4c4]">or continue with</span>
+                <span className="h-px flex-1 bg-[#0e1d38]/08" />
+              </div>
 
-          {/* Back home */}
-          <Link href="/" className="mt-4 block text-center text-xs font-medium text-[#a8b4c4] hover:text-[#5a6b86]">
-            ← Back to home
-          </Link>
+              {/* OAuth — Google live, GitHub disabled for now */}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {["Google", "GitHub"].map((provider) => (
+                  <button
+                    key={provider}
+                    type="button"
+                    disabled={provider === "GitHub"}
+                    onClick={() => {
+                      if (provider === "Google") {
+                        handleGoogleAuth();
+                      }
+                    }}
+                    className="ghost-button focus-ring flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold text-[#0e1d38] disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {provider === "Google" ? (
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                    ) : (
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                      </svg>
+                    )}
+                    {provider}
+                  </button>
+                ))}
+              </div>
+
+              {/* Footer note */}
+              <p className="mt-6 text-center text-xs text-[#a8b4c4]">
+                {isSignUp ? (
+                  <>
+                    Already have an account?{" "}
+                    <button onClick={() => setMode("signin")} className="font-semibold text-[#2f7de8] hover:underline">
+                      Sign in
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Don&apos;t have an account?{" "}
+                    <button onClick={() => setMode("signup")} className="font-semibold text-[#2f7de8] hover:underline">
+                      Sign up free
+                    </button>
+                  </>
+                )}
+              </p>
+
+              {/* Back home */}
+              <Link href="/" className="mt-4 block text-center text-xs font-medium text-[#a8b4c4] hover:text-[#5a6b86]">
+                ← Back to home
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

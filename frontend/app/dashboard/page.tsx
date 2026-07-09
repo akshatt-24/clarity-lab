@@ -8,21 +8,38 @@ import { AlertCircle, Clock3, FileText } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import UploadCard from "@/components/report/UploadCard";
 
+import { useUser } from "@clerk/nextjs";
+
+
+
 const stats = [
   { label: "Total Reports",  value: "0", sub: "Reports analyzed",  icon: FileText,    gradient: "from-[#2f7de8] to-[#1a5eb8]", glow: "hover-glow" },
   { label: "Recent Uploads", value: "0", sub: "This month",         icon: Clock3,      gradient: "from-[#1f8068] to-[#28893e]", glow: "hover-glow-teal" },
   { label: "Flagged Items",  value: "0", sub: "Needs attention",    icon: AlertCircle, gradient: "from-[#f07c00] to-[#d96b00]", glow: "hover-glow-orange" },
 ];
 
+
 export default function Dashboard() {
   const [report, setReport] =
   useState<ClarityReport | null>(null);
+
+  const { user } = useUser();
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1400px]">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#0e1d38]">Dashboard</h1>
-          <p className="mt-1.5 text-sm text-[#5a6b86]">Upload and manage your health reports</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#0e1d38]">
+            Welcome {user?.firstName ?? "there"}
+          </h1>
+
+          <p className="mt-1.5 text-sm text-[#5a6b86]">
+            {user?.primaryEmailAddress?.emailAddress}
+          </p>
+
+          <p className="mt-1 text-sm text-[#5a6b86]">
+            Upload and manage your health reports
+          </p>
         </div>
 
         <div className="mt-7 grid gap-5 lg:grid-cols-3">

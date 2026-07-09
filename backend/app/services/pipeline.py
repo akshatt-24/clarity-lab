@@ -58,11 +58,16 @@ def process_report(
     filename=pdf_path.name,
     summary=report.summary,
     )
-    ## Saving the parsed biomarkers (not the LLM generated explanations)
+    
+    all_biomarkers = [
+        *report.attention_required,
+        *report.normal_biomarkers,
+    ]
+
     create_many(
-    db=db,
-    report_id=saved_report.id,
-    biomarkers=biomarkers,
+        db=db,
+        report_id=saved_report.id,
+        biomarkers=all_biomarkers,
     )
     
     report.report_id = saved_report.id

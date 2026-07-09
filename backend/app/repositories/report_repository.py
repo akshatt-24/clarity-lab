@@ -50,3 +50,36 @@ def delete_report(
 
     db.delete(report)
     db.commit()
+    
+def get_all_reports(
+    db: Session,
+):
+
+    return (
+
+        db.query(Report)
+
+        .order_by(
+            Report.uploaded_at.desc()
+        )
+
+        .all()
+
+    )
+    
+def get_report_by_id(
+    db: Session,
+    report_id: str,
+):
+
+    return (
+
+        db.query(Report)
+
+        .filter(
+            Report.id == report_id
+        )
+
+        .first()
+
+    )

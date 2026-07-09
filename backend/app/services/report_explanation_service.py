@@ -80,16 +80,30 @@ def generate_report_explanations(biomarkers):
         if str(b.status).lower() == "high"
     )
     
-    normal_biomarkers = [
-        {
-            "test_name": b.test_name,
-            "value": b.value,
-            "status": b.status
-        }
-        for b in biomarkers
-        if str(b.status).lower() == "normal"
-    ]
+    from backend.app.schemas.normal_biomarker import (
+        NormalBiomarker,
+    )
 
+    normal_biomarkers = [
+
+        NormalBiomarker(
+
+            test_name=b.test_name,
+
+            value=b.value,
+
+            status=b.status,
+
+            reference_range=b.reference_range,
+
+        )
+
+        for b in biomarkers
+
+        if str(b.status).lower() == "normal"
+
+    ]
+    
     abnormal_biomarkers = [
         b
         for b in biomarkers
